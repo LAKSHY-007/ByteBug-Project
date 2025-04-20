@@ -1,0 +1,373 @@
+
+SecureVote | Decentralized Voting
+🗳️
+wide
+expanded
+en
+English
+hi
+Hindi
+ta
+Tamil
+pa
+Punjabi
+mr
+Marathi
+language
+en
+Language
+locales
+Test translation for welcome
+id
+name
+Pragati Vijay
+party
+Vaayunagar
+color
+#636EFA
+avatar
+👩‍🚀
+id
+name
+Khushi seva
+party
+BSF
+color
+#EF553B
+avatar
+👷‍♂️
+id
+name
+Pradeep
+party
+Mela
+color
+#00CC96
+avatar
+🧑‍💻
+locales
+en
+English
+hi
+Hindi
+ta
+Tamil
+pa
+Punjabi
+mr
+Marathi
+
+language_switch
+
+Creates a floating particle animation background
+
+
+particle-canvas
+
+
+Interactive 3D blockchain visualization
+
+
+blockchain-viz
+height:{height}px;
+https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
+
+
+Advanced face scanning effect
+
+
+face-scan
+grid-overlay
+scan-line
+
+
+Initialize all session state variables
+
+
+Generate a simulated fingerprint hash with visual feedback
+
+Fingerprint verified!
+{voter_id}-{datetime.now().timestamp()}
+
+Enhanced face capture with visual feedback
+
+RGB
+Failed to access camera
+Hold still... {3-int(elapsed)}
+
+One-time admin setup process
+
+👑 Admin Setup
+This is a one-time setup to create the system administrator
+admin_setup
+Admin Name
+Your full name
+Admin ID
+Unique admin identifier
+Set Admin PIN (6 digits)
+password
+Register Admin
+PIN must be exactly 6 digits
+Please look at the camera for facial registration
+Admin account created successfully!
+Please complete all fields
+
+Two-factor authentication for admin access
+
+🔒 Admin Authentication
+Admin privileges require face and PIN verification
+Step 1: Face Verification
+Start Face Scan
+Admin face verified!
+No matching admin found
+Step 2: PIN Verification
+Enter Admin PIN
+password
+Verify PIN
+Admin authenticated successfully!
+Incorrect PIN
+
+Landing page with futuristic intro
+
+🚀 Decentralized Voting System
+---
+
+
+Get Started
+hero_cta
+primary
+register
+---
+Key Features
+🧑‍💻
+Facial Recognition
+Advanced AI verifies voter identity
+🖐️
+Fingerprint Auth
+Biometric security layer
+⛓️
+Blockchain Backed
+Immutable transaction ledger
+📊
+Real-time Results
+Live updating analytics
+👁️
+Transparent
+Publicly verifiable records
+🔐
+End-to-End Secure
+Military-grade encryption
+<h3>{icon} {title}</h3><p>{desc}</p>
+
+Voter registration with advanced animations
+
+👤 Voter Registration
+---
+registration_form
+Full Name
+Enter your full name
+Voter ID
+Unique voter identifier
+Begin Biometric Enrollment
+primary
+This Voter ID is already registered
+
+face-capture-instructions
+
+Securing your data on the blockchain...
+Generating cryptographic hash...
+Creating transaction...
+type
+registration
+voter_id
+timestamp
+biometric_hash
+system
+Mining block...
+Registration complete!
+complete
+You are now registered to vote!
+
+color: white;
+
+Please complete all fields
+
+Voter verification process
+
+Voter Verification
+Enter your Voter ID
+Start Verification
+Voter ID not found
+Please look at the camera for verification
+VERIFIED
+NOT MATCHING
+Identity verified!
+Verification failed
+
+Immersive voting experience
+
+🗳️ Cast Your Vote
+---
+Voter not found in registry
+You have already voted in this election
+
+color: white;
+
+Select Your Candidate
+
+candidate-card-{i}
+text-align: center;
+font-size: 3rem;
+color: {candidate['color']}
+
+Vote for {candidate['name']}
+vote_{i}
+Recording vote for {candidate['name']}...
+voter_id
+candidate_id
+id
+timestamp
+type
+vote
+voter_id
+candidate_id
+id
+timestamp
+system
+Vote for {candidate['name']} recorded!
+
+https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js
+
+
+Protected results dashboard - only accessible by admin
+
+📊 Live Election Results
+---
+id
+candidate_id
+Participation Metrics
+Total Registered
+Votes Cast
+{total_votes/total_registered*100:.1f}%
+0%
+normal
+Leading Candidate
+name
+N/A
+Vote Distribution
+Candidate
+name
+Votes
+id
+Party
+party
+Color
+color
+Percentage
+id
+Candidate
+Votes
+Candidate
+name
+color
+Votes
+Votes
+Vote Share
+Votes
+Candidate
+Candidate
+name
+color
+
+clock
+live-clock
+last-update
+update-time
+
+Voting Activity Over Time
+Votes per Hour
+value
+Votes
+hour
+Time
+id
+color
+
+Protected admin dashboard - only accessible by admin
+
+👑 Administrator Dashboard
+---
+ADMIN PRIVILEGES ACTIVATED
+⚠️
+📈 Statistics
+⛓ Blockchain
+⚙ System
+Voter Analytics
+Date
+Daily Registrations
+value
+Registrations
+spline
+svg
+Votes by Hour
+group
+id
+color
+Blockchain Explorer
+### Latest Blocks
+Block
+Transactions
+Timestamp
+Hash
+...
+Timestamp
+Timestamp
+Hash
+Block Hash
+System Controls
+Critical Operations - Use with caution
+🗑️ Reset All Data
+primary
+System reset complete!
+🔐 Generate Security Report
+Analyzing system...
+Security audit complete
+blockchain_integrity
+verified
+voter_data_encryption
+enabled
+biometric_protection
+active
+threat_level
+low
+### Data Management
+💾 Export Blockchain Data
+blockchain_export.json
+application/json
+SecureVote | Decentralized Voting
+🗳️
+wide
+expanded
+
+
+https://via.placeholder.com/150x50/1a1a2e/ffffff?text=SecureVote
+---
+🏠 Home
+👤 Register
+🗳️ Vote
+📊 Results
+👑 Admin
+Navigation
+collapsed
+---
+### System Status
+Voters
+Votes
+
+
+🔒 Logout Admin
+🏠 Home
+👤 Register
+🗳️ Vote
+📊 Results
+👑 Admin
