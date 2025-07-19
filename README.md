@@ -129,3 +129,19 @@ yarn install
 
 
 
+
+
+## ⚠️ License and Usage Warning
+
+This repository is public only for demonstration purposes.
+
+- ❌ Forking not allowed
+- ❌ Cloning not allowed
+- ❌ Reuse not allowed
+
+All rights reserved © 2025 by Khushi, Lakshya, Pradeep, Pragati, and Yash.
+
+
+
+
+
