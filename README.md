@@ -18,7 +18,7 @@ This project is a collaborative effort developed by:
 - **Pradeep Singh Gurjar**
 - **Khushi Pal**
 - **Yash Dubey**
-- 
+  
 and was presented in a hackathon held in Delhi and were the finalists.
 ---
 
