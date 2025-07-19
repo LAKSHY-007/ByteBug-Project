@@ -1,6 +1,6 @@
 # 🗳️ SecureVote (Decentralized Voting System)
 
-![Project Banner](https://via.placeholder.com/1200x600?text=Decentralized+Voting+System)  
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)  
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.0-blue)](https://soliditylang.org/)  
 [![Build Status](https://img.shields.io/github/actions/workflow/status/yourusername/decentralized-voting/ci.yml)](https://github.com/yourusername/decentralized-voting/actions)
