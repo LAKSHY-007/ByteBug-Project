@@ -18,6 +18,7 @@ This project is a collaborative effort developed by:
 - **Pradeep Singh Gurjar**
 - **Khushi Pal**
 - **Yash Dubey**
+- 
 and was presented in a hackathon held in Delhi and were the finalists.
 ---
 
@@ -55,8 +56,10 @@ The process is divided into three main modules:
 - 💾 Receipt available for download  
 - 🙏 Display **Thank You** message and redirect to dashboard  
 
-![System Flow](<img width="872" height="547" alt="image" src="https://github.com/user-attachments/assets/6ad73cbd-c404-4026-987e-13c82fd2fd94" />
-)  
+### System Flow
+<img width="845" height="570" alt="image" src="https://github.com/user-attachments/assets/4ab44609-5c22-4fd2-9f2d-c21f93f64738" />
+
+  
 
 
 ---
