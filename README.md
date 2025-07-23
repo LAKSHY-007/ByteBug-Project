@@ -14,8 +14,8 @@
 This project is a collaborative effort developed by:
 
 - **Lakshya Pendharkar**
-- **Pragati Bhadoria**
 - **Pradeep Singh Gurjar**
+- **Pragati Bhadoria**
 - **Khushi Pal**
 - **Yash Dubey**
   
