@@ -1,144 +1,80 @@
 pipeline {
     agent any
-    tools {
-        python 'Python3.10'
-    }
     environment {
         PROJECT_DIR = 'decentralized-voting-system'
-        DOCKER_IMAGE = 'securevote-app'
     }
     stages {
         stage('Checkout Code') {
             steps {
-                echo 'Checking out SecureVote code from GitHub...'
-                git branch: 'main', 
-                    url: 'https://github.com/LAKSHY-007/ByteBug-Project'
-                echo 'Code checkout completed'
+                echo 'Checking out SecureVote code...'
+                git branch: 'main', url: 'https://github.com/LAKSHY-007/ByteBug-Project.git'
+            }
+        }
+        
+        stage('Setup Python') {
+            steps {
+                echo 'Setting up Python manually...'
+                sh '''
+                sudo apt-get update
+                sudo apt-get install -y python3.10 python3-pip
+                python3 --version
+                pip3 --version
+                '''
             }
         }
         
         stage('Install Dependencies') {
             steps {
-                echo 'Installing blockchain dependencies...'
+                echo 'Installing dependencies...'
                 dir(env.PROJECT_DIR) {
                     sh '''
-                    python -m pip install --upgrade pip
-                    pip install pytest web3 flask cryptography pycryptodome
-                    pip install numpy requests
-                    echo "Dependencies installed"
+                    pip3 install -r requirements.txt
+                    pip3 install pytest web3 flask cryptography
                     '''
                 }
             }
         }
         
-        stage('Run Blockchain Tests') {
+        stage('Run Tests') {
             steps {
-                echo 'Running SecureVote test suite...'
+                echo 'Running tests...'
                 dir(env.PROJECT_DIR) {
-                    sh '''
-                    echo "Running blockchain tests..."
-                    python -m pytest tests/ -v --junitxml=test-results.xml
-                    '''
+                    sh 'python3 -m pytest tests/ -v --junitxml=test-results.xml'
                 }
             }
             post {
                 always {
                     junit "${env.PROJECT_DIR}/test-results.xml"
-                    echo "Test results archived"
                 }
             }
         }
         
-        stage('Security Audit') {
+        stage('Security Scan') {
             steps {
-                echo 'Running blockchain security scan...'
+                echo 'Running security scan...'
                 dir(env.PROJECT_DIR) {
                     sh '''
-                    pip install bandit safety
-                    echo "=== Bandit Security Scan ==="
-                    bandit -r . -f html -o security-report.html || true
-                    echo "=== Dependency Vulnerability Scan ==="
-                    safety check --json > vulnerability-report.json || true
+                    pip3 install bandit
+                    bandit -r . -f html -o security-scan.html || true
                     '''
                 }
             }
             post {
                 always {
-                    archiveArtifacts artifacts: "${env.PROJECT_DIR}/security-report.html, ${env.PROJECT_DIR}/vulnerability-report.json", 
-                                  fingerprint: true
-                    echo "Security reports archived"
-                }
-            }
-        }
-        
-        stage('Build Docker Container') {
-            when {
-                expression { 
-                    currentBuild.result == null || currentBuild.result == 'SUCCESS' 
-                }
-            }
-            steps {
-                echo 'Building Docker image for production...'
-                dir(env.PROJECT_DIR) {
-                    sh '''
-                    if [ ! -f Dockerfile ]; then
-                        cat > Dockerfile << EOF
-FROM python:3.10-slim
-WORKDIR /app
-COPY . .
-RUN pip install -r requirements.txt
-EXPOSE 5000
-CMD ["python", "app.py"]
-EOF
-                    fi
-                    
-                    echo "Building Docker image ${env.DOCKER_IMAGE}:${env.BUILD_ID}"
-                    docker build -t ${env.DOCKER_IMAGE}:${env.BUILD_ID} .
-                    '''
-                }
-            }
-        }
-        
-        stage('Deploy to Staging') {
-            when {
-                expression { 
-                    currentBuild.result == null || currentBuild.result == 'SUCCESS' 
-                }
-            }
-            steps {
-                echo 'Deploying to staging environment...'
-                script {
-                    echo "Would deploy to Kubernetes/AWS here"
-                    echo "Image: ${env.DOCKER_IMAGE}:${env.BUILD_ID}"
-                    echo "Deployment strategy: Blue-green"
-                    echo "Health check: /health endpoint"
+                    archiveArtifacts artifacts: "${env.PROJECT_DIR}/security-scan.html"
                 }
             }
         }
     }
     post {
         always {
-            echo "SecureVote Pipeline Completed"
-            echo "Build URL: ${env.BUILD_URL}"
-            echo "Result: ${currentBuild.result}"
-            cleanWs()
+            echo "Build completed: ${currentBuild.result}"
         }
         success {
-            echo 'Production-ready build completed!'
-            script {
-                echo "Email: SecureVote build #${env.BUILD_NUMBER} successful"
-                echo "Slack: Deployment ready for review"
-            }
+            echo 'Pipeline succeeded!'
         }
         failure {
-            echo 'Build failed! Blocking deployment.'
-            script {
-                echo "Email: SecureVote build #${env.BUILD_NUMBER} failed"
-                echo "Slack: Build failed - check Jenkins"
-            }
-        }
-        unstable {
-            echo 'Build unstable - tests failing but proceeding'
+            echo 'Pipeline failed!'
         }
     }
 }
