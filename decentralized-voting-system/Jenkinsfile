@@ -1,0 +1,144 @@
+pipeline {
+    agent any
+    tools {
+        python 'Python3.10'
+    }
+    environment {
+        PROJECT_DIR = 'decentralized-voting-system'
+        DOCKER_IMAGE = 'securevote-app'
+    }
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo 'Checking out SecureVote code from GitHub...'
+                git branch: 'main', 
+                    url: 'https://github.com/LAKSHY-007/ByteBug-Project'
+                echo 'Code checkout completed'
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing blockchain dependencies...'
+                dir(env.PROJECT_DIR) {
+                    sh '''
+                    python -m pip install --upgrade pip
+                    pip install pytest web3 flask cryptography pycryptodome
+                    pip install numpy requests
+                    echo "Dependencies installed"
+                    '''
+                }
+            }
+        }
+        
+        stage('Run Blockchain Tests') {
+            steps {
+                echo 'Running SecureVote test suite...'
+                dir(env.PROJECT_DIR) {
+                    sh '''
+                    echo "Running blockchain tests..."
+                    python -m pytest tests/ -v --junitxml=test-results.xml
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit "${env.PROJECT_DIR}/test-results.xml"
+                    echo "Test results archived"
+                }
+            }
+        }
+        
+        stage('Security Audit') {
+            steps {
+                echo 'Running blockchain security scan...'
+                dir(env.PROJECT_DIR) {
+                    sh '''
+                    pip install bandit safety
+                    echo "=== Bandit Security Scan ==="
+                    bandit -r . -f html -o security-report.html || true
+                    echo "=== Dependency Vulnerability Scan ==="
+                    safety check --json > vulnerability-report.json || true
+                    '''
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: "${env.PROJECT_DIR}/security-report.html, ${env.PROJECT_DIR}/vulnerability-report.json", 
+                                  fingerprint: true
+                    echo "Security reports archived"
+                }
+            }
+        }
+        
+        stage('Build Docker Container') {
+            when {
+                expression { 
+                    currentBuild.result == null || currentBuild.result == 'SUCCESS' 
+                }
+            }
+            steps {
+                echo 'Building Docker image for production...'
+                dir(env.PROJECT_DIR) {
+                    sh '''
+                    if [ ! -f Dockerfile ]; then
+                        cat > Dockerfile << EOF
+FROM python:3.10-slim
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+EXPOSE 5000
+CMD ["python", "app.py"]
+EOF
+                    fi
+                    
+                    echo "Building Docker image ${env.DOCKER_IMAGE}:${env.BUILD_ID}"
+                    docker build -t ${env.DOCKER_IMAGE}:${env.BUILD_ID} .
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            when {
+                expression { 
+                    currentBuild.result == null || currentBuild.result == 'SUCCESS' 
+                }
+            }
+            steps {
+                echo 'Deploying to staging environment...'
+                script {
+                    echo "Would deploy to Kubernetes/AWS here"
+                    echo "Image: ${env.DOCKER_IMAGE}:${env.BUILD_ID}"
+                    echo "Deployment strategy: Blue-green"
+                    echo "Health check: /health endpoint"
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo "SecureVote Pipeline Completed"
+            echo "Build URL: ${env.BUILD_URL}"
+            echo "Result: ${currentBuild.result}"
+            cleanWs()
+        }
+        success {
+            echo 'Production-ready build completed!'
+            script {
+                echo "Email: SecureVote build #${env.BUILD_NUMBER} successful"
+                echo "Slack: Deployment ready for review"
+            }
+        }
+        failure {
+            echo 'Build failed! Blocking deployment.'
+            script {
+                echo "Email: SecureVote build #${env.BUILD_NUMBER} failed"
+                echo "Slack: Build failed - check Jenkins"
+            }
+        }
+        unstable {
+            echo 'Build unstable - tests failing but proceeding'
+        }
+    }
+}
