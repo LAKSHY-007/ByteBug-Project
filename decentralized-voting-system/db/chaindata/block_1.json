@@ -1,0 +1,23 @@
+{
+  "index": 1,
+  "transactions": [
+    {
+      "sender": "system",
+      "voter_data": {
+        "type": "registration",
+        "voter_id": "VOTER675849",
+        "name": "Khushi Pal",
+        "timestamp": "2025-07-19T16:15:27.155250",
+        "biometric_hash": "84bc57569cff4b8cf0b92736132d4329cd24d0b18c6199ec05b39350d2cc5ec7",
+        "state": "Madhya Pradesh",
+        "city": "Gwalior"
+      },
+      "timestamp": 1752921927.15525,
+      "tx_hash": "39249a141265207a1e10d38fbfc8ece0e104f4bc1d8ed1644c1b127745b72de1"
+    }
+  ],
+  "timestamp": 1752921928.671327,
+  "previous_hash": "8a3180430fb12a09a791e6d957fb52e0c16c816de5d8b69647b8e8ffb787e5f8",
+  "nonce": 123,
+  "hash": "8a3539f0141b8ecd01d4bef93da95da075bf92df9f30b29e95c953a3fda71b31"
+}

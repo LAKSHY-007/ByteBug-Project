@@ -22,6 +22,13 @@ from typing import Optional
 import json
 import pickle
 from pathlib import Path
+<<<<<<< Updated upstream
+=======
+import qrcode
+from io import BytesIO
+import base64
+import random
+>>>>>>> Stashed changes
 
 
 CANDIDATES = [
@@ -30,6 +37,268 @@ CANDIDATES = [
     {"id": 3, "name": "DullPur", "party": "Mela", "color": "#00CC96", "avatar": "🧑‍💻"}
 ]
 
+<<<<<<< Updated upstream
+=======
+VOTER_DB_PATH = Path(r"E:\voting_system\decentralized-voting-system\backend\db\voter_database.json")
+
+def load_voter_db():
+    """Load voter database from JSON file with proper error handling"""
+    try:
+        if not VOTER_DB_PATH.exists():
+            st.error(f"Voter database not found at: {VOTER_DB_PATH}")
+            return {}
+            
+        with open(VOTER_DB_PATH, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        st.error(f"Voter database file not found at: {VOTER_DB_PATH}")
+        return {}
+    except json.JSONDecodeError:
+        st.error("Invalid JSON format in voter database")
+        return {}
+    except Exception as e:
+        st.error(f"Failed to load voter database: {str(e)}")
+        return {}
+
+def verify_voter_id(voter_id: str) -> dict:
+    """
+    Verify voter ID against database
+    Returns: {
+        "exists": bool,
+        "eligible": bool,
+        "name": str,
+        "state": str,
+        "city": str,
+        "message": str
+    }
+    """
+    voter_db = load_voter_db()
+    voter_id = voter_id.strip().upper()
+    
+    if not isinstance(voter_db, dict):
+        return {
+            "exists": False,
+            "eligible": False,
+            "name": "",
+            "state": "",
+            "city": "",
+            "message": "Database error"
+        }
+    
+    if voter_id not in voter_db:
+        return {
+            "exists": False,
+            "eligible": False,
+            "name": "",
+            "state": "",
+            "city": "",
+            "message": "Voter ID not found in database"
+        }
+    
+    voter_data = voter_db[voter_id]
+    return {
+        "exists": True,
+        "eligible": voter_data.get("eligible", False),
+        "name": voter_data.get("name", ""),
+        "state": voter_data.get("state", ""),
+        "city": voter_data.get("city", ""),
+        "message": voter_data.get("ineligible_reason", "Eligible to vote")
+    }
+
+def generate_voting_receipt(voter_id,timestamp, verification_key, candidate_color):
+    """Generate HTML receipt with QR code and verification details"""
+    # Generate discount QR code
+    discount_code = f"VOTE-{verification_key[:4]}-{timestamp.strftime('%m%d')}"
+    discount_url = f"https://partners.elections.gov/discount?code={discount_code}"
+    
+    qr = qrcode.QRCode(version=1, box_size=4, border=2)
+    qr.add_data(discount_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color=candidate_color, back_color="white")
+    
+    # Convert QR to base64
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode()
+    
+    return f"""
+    <div style="
+        border: 2px solid {candidate_color};
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+        background: white;
+        color: #333;
+        font-family: Arial, sans-serif;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    ">
+        <h2 style="color: {candidate_color}; text-align: center; margin-bottom: 5px;">Voting Receipt</h2>
+        <p style="text-align: center; color: #666; margin-top: 0;">Your vote has been securely recorded</p>
+        <hr style="border-color: #eee;">
+        
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <div>
+                <p><strong>Voter ID:</strong> {voter_id}</p>
+                
+                <p><strong>Time:</strong> {timestamp.strftime('%Y-%m-%d %H:%M:%S')}</p>
+            </div>
+            <div style="text-align: center;">
+                <img src="data:image/png;base64,{img_str}" width="120">
+                <p style="font-size: 12px; margin-top: 5px;">Scan for exclusive discounts</p>
+            </div>
+        </div>
+        
+        <div style="
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid {candidate_color};
+            margin-top: 15px;
+        ">
+            <p style="margin: 0 0 8px 0; font-weight: bold;">Verification Key:</p>
+            <div style="
+                background: white;
+                padding: 8px;
+                border-radius: 4px;
+                font-family: monospace;
+                word-break: break-all;
+            ">{verification_key}</div>
+            <p style="font-size: 12px; margin: 8px 0 0 0;">
+                Use this key at our verification portal to confirm your vote was recorded.
+            </p>
+        </div>
+        
+        <p style="font-size: 12px; color: #666; margin-top: 20px; text-align: center;">
+            This receipt proves your participation but does not reveal your voting choice publicly.
+        </p>
+    </div>
+    """
+
+def verify_vote_page():
+    """Enhanced vote verification page with blockchain validation"""
+    st.title("🔍 Verify Your Vote")
+    st.markdown("---")
+    
+    with st.form("verify_vote"):
+        col1, col2 = st.columns(2)
+        with col1:
+            voter_id = st.text_input("Voter ID", placeholder="Enter your Voter ID").strip().upper()
+        with col2:
+            verification_key = st.text_input("Verification Key", placeholder="From your voting receipt")
+        
+        if st.form_submit_button("Verify My Vote", type="primary"):
+            if not voter_id or not verification_key:
+                st.warning("Please enter both Voter ID and Verification Key")
+                return
+            
+            with st.spinner("Verifying your vote..."):
+                # Check local votes first
+                vote_record = next(
+                    (v for v in st.session_state.votes 
+                     if v["voter_id"] == voter_id 
+                     and v.get("verification_key") == verification_key),
+                    None
+                )
+                
+                if vote_record:
+                    # Verify against blockchain
+                    blockchain_verified = False
+                    for block in reversed(st.session_state.blockchain.chain):
+                        for tx in block.transactions:
+                            if (tx.get('type') == 'vote' and 
+                                tx.get('voter_id') == voter_id and
+                                sha256(verification_key.encode()).hexdigest() == tx.get('verification_hash')):
+                                blockchain_verified = True
+                                confirmation_block = block.index
+                                break
+                        if blockchain_verified:
+                            break
+                    
+                    candidate = next(
+                        c for c in CANDIDATES 
+                        if c["id"] == vote_record["candidate_id"]
+                    )
+                    
+                    # Display verification results
+                    st.success("## ✅ Vote Verification Successful")
+                    
+                    # Create verification card
+                    verification_card = f"""
+                    <div style="
+                        border: 2px solid {candidate['color']};
+                        border-radius: 10px;
+                        padding: 20px;
+                        margin: 15px 0;
+                        background: white;
+                        color: #333;
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="color: {candidate['color']}; margin-bottom: 5px;">Your Voting Record</h3>
+                                <p><strong>Voter ID:</strong> {voter_id}</p>
+                                <p><strong>Candidate:</strong> {candidate['name']}</p>
+                                <p><strong>Party:</strong> {candidate['party']}</p>
+                                <p><strong>Voted at:</strong> {vote_record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}</p>
+                            </div>
+                            <div style="font-size: 3rem;">{candidate['avatar']}</div>
+                        </div>
+                        <hr style="border-color: #eee;">
+                        <div style="
+                            background: #f8f9fa;
+                            padding: 12px;
+                            border-radius: 6px;
+                            margin-top: 10px;
+                        ">
+                            <p style="margin: 0 0 5px 0; font-weight: bold;">Blockchain Confirmation:</p>
+                            <p style="margin: 0;">
+                                Block #{confirmation_block} ({'✅ Verified' if blockchain_verified else '⚠️ Pending'})
+                            </p>
+                            <p style="margin: 5px 0 0 0; font-size: 12px;">
+                                Transaction hash: {sha256(f"{voter_id}{verification_key}".encode()).hexdigest()[:16]}...
+                            </p>
+                        </div>
+                    </div>
+                    """
+                    st.markdown(verification_card, unsafe_allow_html=True)
+                    
+                    # Privacy notice
+                    st.info("""
+                    **Privacy Notice:**  
+                    Your actual vote choice is never publicly linked to your identity.  
+                    This verification only confirms your participation in the election.
+                    """)
+                    
+                    # Additional verification info
+                    with st.expander("🔒 Advanced Verification Details"):
+                        st.markdown(f"""
+                        **Verification Key:** `{verification_key}`  
+                        **Key Hash:** `{sha256(verification_key.encode()).hexdigest()}`  
+                        **Block Timestamp:** `{block.timestamp if blockchain_verified else 'Not confirmed'}`  
+                        **Transactions in Block:** `{len(block.transactions) if blockchain_verified else 'N/A'}`  
+                        
+                        *This information can be used to independently verify the transaction on the blockchain.*
+                        """)
+                else:
+                    st.error("""
+                    ## ❌ Verification Failed
+                    No matching vote found with these credentials. Please check:
+                    - Your Voter ID is correct
+                    - You entered the Verification Key exactly as shown on your receipt
+                    - Your vote was successfully recorded
+                    """)
+                    
+                    # Help section
+                    with st.expander("Need help?"):
+                        st.markdown("""
+                        If you're having trouble verifying your vote:
+                        1. Double-check your voting receipt
+                        2. Ensure you're entering the exact Verification Key
+                        3. Contact election support if you believe there's an error
+                        
+                        **Support Email:** verify@elections.gov
+                        """)
+
+>>>>>>> Stashed changes
 def particle_animation():
     """Creates a floating particle animation background"""
     return """
@@ -230,15 +499,92 @@ def hash_face_encoding(encoding):
     return sha256(encoding.tobytes()).hexdigest()
 
 def simulate_fingerprint(voter_id):
-    """Generate a simulated fingerprint hash with visual feedback"""
-    with st.spinner('Scanning fingerprint...'):
+    """Generate a simulated fingerprint hash with realistic visual feedback"""
+    
+    # Container for the scanner visualization
+    scanner_placeholder = st.empty()
+    
+    # Initial scanner display
+    with scanner_placeholder.container():
+        st.markdown("""
+        <div style="background-color: #111; border-radius: 10px; padding: 20px; text-align: center;">
+            <h3 style="color: #4CAF50;">BIOMETRIC SCANNER v3.2</h3>
+            <div style="background-color: #000; height: 200px; border-radius: 5px; margin: 10px 0; 
+                        display: flex; justify-content: center; align-items: center;">
+                <p style="color: #888;">Place finger on scanner</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Start scanning process
+    with st.spinner('Initializing fingerprint scanner...'):
         time.sleep(1.5)
-        progress_bar = st.progress(0)
-        for percent_complete in range(100):
-            time.sleep(0.02)
-            progress_bar.progress(percent_complete + 1)
-        st.success("Fingerprint verified!")
-        return sha256(f"{voter_id}-{datetime.now().timestamp()}".encode()).hexdigest()
+    
+    # Finger placement detection
+    scanner_placeholder.empty()
+    with scanner_placeholder.container():
+        st.markdown("""
+        <div style="background-color: #111; border-radius: 10px; padding: 20px; text-align: center;">
+            <h3 style="color: #4CAF50;">BIOMETRIC SCANNER v3.2</h3>
+            <div style="background-color: #000; height: 200px; border-radius: 5px; margin: 10px 0; 
+                        display: flex; justify-content: center; align-items: center;">
+                <p style="color: #4CAF50;">✓ Finger detected</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Scanning progress with realistic pattern
+    progress_text = st.empty()
+    progress_bar = st.progress(0)
+    
+    # Simulate scanning different parts of the fingerprint
+    scan_pattern = [
+        ("Calibrating scanner", 10),
+        ("Scanning fingerprint core", 25),
+        ("Analyzing ridge patterns", 45),
+        ("Verifying minutiae points", 70),
+        ("Cross-referencing database", 90),
+        ("Finalizing verification", 100)
+    ]
+    
+    for step_text, target_progress in scan_pattern:
+        progress_text.markdown(f"<div style='text-align: center; margin-bottom: 5px;'>{step_text}...</div>", 
+                              unsafe_allow_html=True)
+        
+        current_progress = progress_bar.progress(0)
+        step_duration = random.uniform(0.5, 1.2)  # Vary timing for realism
+        
+        while current_progress < target_progress:
+            increment = random.uniform(1, 3)  # Variable progress increments
+            current_progress = min(current_progress + increment, target_progress)
+            progress_bar.progress(int(current_progress))
+            time.sleep(0.05)
+    
+    # Final verification with animation
+    progress_text.empty()
+    with st.spinner('Final verification in progress...'):
+        time.sleep(1.5)
+    
+    # Successful scan visualization
+    scanner_placeholder.empty()
+    with scanner_placeholder.container():
+        st.markdown("""
+        <div style="background-color: #111; border-radius: 10px; padding: 20px; text-align: center;">
+            <h3 style="color: #4CAF50;">BIOMETRIC SCANNER v3.2</h3>
+            <div style="background-color: #000; height: 200px; border-radius: 5px; margin: 10px 0; 
+                        display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 13L9 17L19 7" stroke="#4CAF50" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                <p style="color: #4CAF50; margin-top: 10px; font-weight: bold;">VERIFICATION SUCCESSFUL</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.success("Fingerprint verified!")
+    
+    # Generate the fingerprint hash
+    return sha256(f"{voter_id}-{datetime.now().timestamp()}".encode()).hexdigest()
 
 def capture_face() -> Optional[np.ndarray]:
     """Enhanced face capture with visual feedback"""
@@ -285,46 +631,7 @@ def capture_face() -> Optional[np.ndarray]:
     cv2.destroyAllWindows()
     return face_encoding
 
-def setup_admin():
-    """One-time admin setup process"""
-    st.title("👑 Admin Setup")
-    st.warning("This is a one-time setup to create the system administrator")
-    
-    with st.form("admin_setup"):
-        name = st.text_input("Admin Name", placeholder="Your full name")
-        admin_id = st.text_input("Admin ID", placeholder="Unique admin identifier")
-        pin = st.text_input("Set Admin PIN (6 digits)", type="password", max_chars=6)
-        
-        if st.form_submit_button("Register Admin"):
-            if name and admin_id and pin:
-                if len(pin) != 6 or not pin.isdigit():
-                    st.error("PIN must be exactly 6 digits")
-                else:
-                    st.info("Please look at the camera for facial registration")
-                    face_encoding = capture_face()
-                    
-                    if face_encoding is not None:
-                        fingerprint_hash = simulate_fingerprint(admin_id)
-                        
-                        admin = Voter(
-                            voter_id=admin_id,
-                            name=name,
-                            face_encoding=face_encoding,
-                            fingerprint_hash=fingerprint_hash
-                        )
-                        admin.set_pin(pin)
-                        admin.is_admin = True
-                        
-                        st.session_state.voters[admin_id] = admin
-                        st.session_state.admin_configured = True
-                        st.session_state.admin_authenticated = True
-                        st.session_state.current_admin = admin
-                        
-                        st.success("Admin account created successfully!")
-                        time.sleep(2)
-                        st.rerun()
-            else:
-                st.error("Please complete all fields")
+
 
 def verify_admin() -> bool:
     """Two-factor authentication for admin access"""
@@ -414,6 +721,7 @@ def register_page():
     st.markdown("---")
     
     with st.form("registration_form"):
+<<<<<<< Updated upstream
         name = st.text_input("Full Name", placeholder="Enter your full name")
         voter_id = st.text_input("Voter ID", placeholder="Unique voter identifier")
         
@@ -493,6 +801,121 @@ def register_page():
                         """, unsafe_allow_html=True)
             else:
                 st.warning("Please complete all fields")
+=======
+        # check against db
+        voter_id = st.text_input("Voter ID", placeholder="Enter your official Voter ID").strip().upper()
+        
+        if st.form_submit_button("Begin Biometric Enrollment", 
+                               use_container_width=True, type="primary"):
+            if not voter_id:
+                st.warning("Please enter your Voter ID")
+                return
+                
+            # Verify voter with db
+            verification = verify_voter_id(voter_id)
+            
+            if not verification["exists"]:
+                st.error(verification["message"])
+                return
+                
+            if not verification["eligible"]:
+                st.error(f"Cannot register: {verification['message']}")
+                return
+                
+            
+            st.success(f"""
+            Voter Verified!
+            - Name: {verification['name']}
+            - State: {verification['state']}
+            - City: {verification['city']}
+            """)
+            
+            
+            if voter_id in st.session_state.voters:
+                st.error("This Voter ID is already registered in our system")
+                return
+                
+            
+            st.markdown("""
+            <style>
+                .face-capture-instructions {
+                    animation: pulse 2s infinite;
+                }
+                @keyframes pulse {
+                    0% { opacity: 0.8; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0.8; }
+                }
+            </style>
+            <div class="face-capture-instructions">
+                Please position your face in the frame and remain still
+            </div>
+            """, unsafe_allow_html=True)
+            
+            html(face_scan_animation())
+            
+            face_encoding = capture_face()
+            if face_encoding is None:
+                st.error("Face capture failed. Please try again.")
+                return
+                
+            st.session_state.face_encoding = face_encoding
+            
+            fingerprint_hash = simulate_fingerprint(voter_id)
+            
+            
+            voter = Voter(
+                voter_id=voter_id,
+                name=verification['name'], 
+                face_encoding=face_encoding,
+                fingerprint_hash=fingerprint_hash,
+                state=verification['state'],
+                city=verification['city']
+            )
+            st.session_state.voters[voter_id] = voter
+            
+            # Blockchain registration
+            with st.status("Securing your data on the blockchain...", expanded=True) as status:
+                st.write("Generating cryptographic hash...")
+                time.sleep(1)
+                st.write("Creating transaction...")
+                time.sleep(1)
+                
+                tx_data = {
+                    "type": "registration",
+                    "voter_id": voter_id,
+                    "name": verification['name'],
+                    "timestamp": datetime.now().isoformat(),
+                    "biometric_hash": hash_face_encoding(face_encoding),
+                    "state": verification['state'],
+                    "city": verification['city']
+                }
+                st.session_state.blockchain.new_transaction("system", tx_data)
+                st.write("Mining block...")
+                time.sleep(1.5)
+                st.session_state.blockchain.new_block(proof=123)
+                
+                status.update(label="Registration complete!", state="complete", expanded=False)
+            
+            st.balloons()
+            st.success("You are now registered to vote!")
+            st.markdown(f"""
+            <div style="
+                background: linear-gradient(135deg, #00cc96aa, #636efaaa);
+                padding: 1rem;
+                border-radius: 10px;
+                color: white;
+                text-align: center;
+                margin: 1rem 0;
+                animation: fadeIn 1s;
+            ">
+                <h3 style="color: white;">Registration Successful!</h3>
+                <p>Name: <strong>{verification['name']}</strong></p>
+                <p>Voter ID: <strong>{voter_id}</strong></p>
+                <p>Location: {verification['state']}, {verification['city']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+>>>>>>> Stashed changes
 
 def verify_voter():
     """Voter verification process"""
@@ -500,6 +923,41 @@ def verify_voter():
     
     voter_id = st.text_input("Enter your Voter ID")
     if voter_id and st.button("Start Verification"):
+<<<<<<< Updated upstream
+=======
+        
+        try:
+            with open('E:/voting_system/decentralized-voting-system/backend/db/voter_database.json', 'r') as f:
+
+                voters_db = json.load(f)
+        except FileNotFoundError:
+            st.error("Voter database not available")
+            return False
+        except json.JSONDecodeError:
+            st.error("Voter database corrupted")
+            return False
+            
+        if voter_id not in voters_db:
+            st.error("Voter ID not found in database")
+            return False
+            
+        voter_data = voters_db[voter_id]
+        
+        if not voter_data.get("eligible", True):
+            st.error(f"Not eligible: {voter_data.get('message', 'Voter is not eligible')}")
+            return False
+            
+        st.success(f"""
+        Voter ID Verified!
+        - Name: {voter_data.get('name', 'N/A')}
+        - State: {voter_data.get('state', 'N/A')}
+        - City: {voter_data.get('city', 'N/A')}
+        """)
+        
+        
+        st.write("Please look at the camera for biometric verification")
+        
+>>>>>>> Stashed changes
         if voter_id not in st.session_state.voters:
             st.error("Voter ID not found")
             return False
@@ -614,6 +1072,13 @@ def voting_page():
                         for percent in range(100):
                             time.sleep(0.02)
                             progress_bar.progress(percent + 1)
+<<<<<<< Updated upstream
+=======
+                        
+                        # Create vote record
+                        vote_timestamp = datetime.now()
+                        verification_key = sha256(f"{voter_id}{candidate['id']}{vote_timestamp.timestamp()}".encode()).hexdigest()[:16]
+>>>>>>> Stashed changes
                         
                         st.session_state.votes.append({
                             "voter_id": voter_id,
@@ -622,11 +1087,20 @@ def voting_page():
                         })
                         st.session_state.voters[voter_id].has_voted = True
                         
+<<<<<<< Updated upstream
+=======
+                        # Add to blockchain
+>>>>>>> Stashed changes
                         tx_data = {
                             "type": "vote",
                             "voter_id": voter_id,
                             "candidate_id": candidate["id"],
+<<<<<<< Updated upstream
                             "timestamp": datetime.now().isoformat()
+=======
+                            "timestamp": vote_timestamp.isoformat(),
+                            "verification_hash": sha256(verification_key.encode()).hexdigest()  # Store hash only for security
+>>>>>>> Stashed changes
                         }
                         st.session_state.blockchain.new_transaction("system", tx_data)
                         st.session_state.blockchain.new_block(proof=123)
@@ -634,6 +1108,30 @@ def voting_page():
                     st.balloons()
                     st.success(f"Vote for {candidate['name']} recorded!")
                     
+<<<<<<< Updated upstream
+=======
+                    # Generate receipt
+                    receipt_html = generate_voting_receipt(
+                        voter_id=voter_id,
+
+                        timestamp=vote_timestamp,
+                        verification_key=verification_key,
+                        candidate_color=candidate['color']
+                    )
+                    
+                    # Display receipt
+                    st.markdown(receipt_html, unsafe_allow_html=True)
+                    
+                    # Offer download
+                    st.download_button(
+                        "📄 Download Voting Receipt",
+                        data=receipt_html,
+                        file_name=f"vote_receipt_{voter_id}.html",
+                        mime="text/html"
+                    )
+                    
+                    # Confetti celebration
+>>>>>>> Stashed changes
                     html(f"""
                     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
                     <script>
@@ -646,6 +1144,45 @@ def voting_page():
                     </script>
                     """)
 
+<<<<<<< Updated upstream
+=======
+def verify_vote_page():
+    """Page for voters to verify their vote"""
+    st.title("🔍 Verify Your Vote")
+    
+    with st.form("verify_vote"):
+        voter_id = st.text_input("Voter ID").strip().upper()
+        verification_key = st.text_input("Verification Key")
+        
+        if st.form_submit_button("Verify Vote"):
+            vote_record = next(
+                (v for v in st.session_state.votes 
+                 if v["voter_id"] == voter_id 
+                 and v.get("verification_key") == verification_key),
+                None
+            )
+            
+            if vote_record:
+                candidate = next(
+                    c for c in CANDIDATES 
+                    if c["id"] == vote_record["candidate_id"]
+                )
+                
+                st.success(f"""
+                Vote Verified Successfully!
+                - You voted for: {candidate['name']}
+                - Voting time: {vote_record['timestamp'].strftime("%Y-%m-%d %H:%M:%S")}
+                - Block confirmation: #{len(st.session_state.blockchain.chain)-1}
+                """)
+                
+                # Show anonymized proof
+                st.info("""
+                Your vote remains anonymous in the public record. 
+                This verification only confirms your vote was recorded correctly.
+                """)
+            else:
+                st.error("No matching vote found. Please check your credentials.")
+>>>>>>> Stashed changes
 def results_page():
     """Protected results dashboard - only accessible by admin"""
     if not st.session_state.get('admin_configured', False):
