@@ -27,6 +27,5 @@ jobs:
           # Install common packages for blockchain, web apps, and ML
           pip install web3 flask fastapi opencv-python-headless numpy requests
 
-      - name: Run Full Test Suite
-        run: |
-          python -m pytest tests/ -v
+      - name: Execute Test Suite
+  run: python -m pytest decentralized-voting-system/tests/ -v
