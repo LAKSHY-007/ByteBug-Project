@@ -28,4 +28,6 @@ jobs:
           pip install web3 flask fastapi opencv-python-headless numpy requests
 
       - name: Execute Test Suite
-        run: python -m pytest decentralized-voting-system/tests/ -v
+        run: |
+          cd decentralized-voting-system
+          PYTHONPATH=/home/runner/work/ByteBug-Project/ByteBug-Project/decentralized-voting-system:$PYTHONPATH python -m pytest tests/ -v
