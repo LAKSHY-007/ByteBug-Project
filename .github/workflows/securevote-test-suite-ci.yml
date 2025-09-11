@@ -28,4 +28,4 @@ jobs:
           pip install web3 flask fastapi opencv-python-headless numpy requests
 
       - name: Execute Test Suite
-  run: python -m pytest decentralized-voting-system/tests/ -v
+        run: python -m pytest decentralized-voting-system/tests/ -v
